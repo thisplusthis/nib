@@ -1,7 +1,7 @@
 .{
-    .name = .zc,
+    .name = .nib,
     .version = "0.0.0",
-    .fingerprint = 0x40b2b36114a7a7e5, // Changing this has security and trust implications.
+    .fingerprint = 0xaa8befa2cf3f41b2, // Changing this has security and trust implications.
     .minimum_zig_version = "0.16.0",
     .dependencies = .{},
     .paths = .{

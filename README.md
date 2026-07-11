@@ -1,10 +1,10 @@
-# zc
+# nib
 
 A tiny command-line calculator for programmers. Evaluate a 64-bit integer
 expression and print the result in decimal, binary, octal, and hex at once.
 
 ```
-$ zc "2 + 2 * 3"
+$ nib "2 + 2 * 3"
 ╭────────────────────╮
 │  decimal   8       │
 │  binary    0b1000  │
@@ -13,13 +13,13 @@ $ zc "2 + 2 * 3"
 ╰────────────────────╯
 ```
 
-Every line is a valid literal you can paste straight back into `zc`. Output is
+Every line is a valid literal you can paste straight back into `nib`. Output is
 colorized on a terminal and plain when piped or redirected (or when `NO_COLOR`
 is set). Extra lines appear only when they add information — `unsigned` for
 negatives, `char` for a printable ASCII byte:
 
 ```
-$ zc 0x41                     $ zc "~0"
+$ nib 0x41                     $ nib "~0"
 ╭──────────────────────╮      │  decimal   -1                       │
 │  decimal   65        │      │  unsigned  18446744073709551615     │
 │  binary    0b100_0001│      │  binary    0b1111_1111_… (64 bits)  │
@@ -34,7 +34,7 @@ $ zc 0x41                     $ zc "~0"
 Requires [Zig](https://ziglang.org) 0.16.0.
 
 ```
-zig build              # binary at zig-out/bin/zc
+zig build              # binary at zig-out/bin/nib
 zig build run -- "1 << 4"
 zig build test
 ```
@@ -45,28 +45,28 @@ Build an optimized binary straight into a directory on your `PATH`
 (`--prefix DIR` installs to `DIR/bin/`):
 
 ```
-zig build --prefix ~/.local -Doptimize=ReleaseSafe   # -> ~/.local/bin/zc
+zig build --prefix ~/.local -Doptimize=ReleaseSafe   # -> ~/.local/bin/nib
 ```
 
 ## Usage
 
 ```
-zc <expression>
+nib <expression>
 ```
 
 Arguments are joined, so quoting is optional for plain arithmetic:
 
 ```
-zc 0xff + 1
-zc "0xff + 1"
+nib 0xff + 1
+nib "0xff + 1"
 ```
 
 Quote the expression when it contains shell metacharacters
-(`& | ^ ~ << >> *`), otherwise the shell will eat them:
+(`& | ^ ~ << >> * ( )`), otherwise the shell will eat them:
 
 ```
-zc "0xdead & 0xff00"
-zc "1 << 20"
+nib "0xdead & 0xff00"
+nib "1 << 20"
 ```
 
 ### Number formats
@@ -81,7 +81,7 @@ zc "1 << 20"
 
 ### Operators
 
-By precedence, tightest first (C order, left-associative, no parentheses):
+By precedence, tightest first (C order, left-associative). Use `( )` to group:
 
 | Operators   | Description                    |
 |-------------|--------------------------------|

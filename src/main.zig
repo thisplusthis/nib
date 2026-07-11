@@ -1,5 +1,5 @@
 const std = @import("std");
-const zc = @import("zc");
+const nib = @import("nib");
 
 const Palette = struct {
     dim: []const u8 = "",
@@ -14,7 +14,7 @@ const Row = struct { label: []const u8, value: []const u8 };
 /// Write `prefix` then `digits` grouped every `n` into `buf` (e.g. "0xffff_ffff").
 fn radix(buf: []u8, prefix: []const u8, digits: []const u8, n: usize) []const u8 {
     @memcpy(buf[0..prefix.len], prefix);
-    const g = zc.group(buf[prefix.len..], digits, n);
+    const g = nib.group(buf[prefix.len..], digits, n);
     return buf[0 .. prefix.len + g.len];
 }
 
@@ -85,22 +85,22 @@ pub fn main(init: std.process.Init) !void {
     defer args_iter.deinit();
     _ = args_iter.skip();
 
-    // Join all argv so both `zc 2 + 2 * 3` and `zc "2 + 2 * 3"` work.
+    // Join all argv so both `nib 2 + 2 * 3` and `nib "2 + 2 * 3"` work.
     var parts: std.ArrayList([]const u8) = .empty;
     while (args_iter.next()) |a| try parts.append(arena, a);
 
     if (parts.items.len == 0) {
         std.debug.print(
-            \\Usage: zc <expr>
-            \\  zc 0xff + 1            decimal, 0x hex, 0o octal, 0b binary, 1_000
-            \\  zc "0xff & 0x0f"       & | ^ ~ << >>  (quote: the shell eats these)
+            \\Usage: nib <expr>
+            \\  nib 0xff + 1            decimal, 0x hex, 0o octal, 0b binary, 1_000
+            \\  nib "0xff & 0x0f"       & | ^ ~ << >>  (quote: the shell eats these)
             \\
         , .{});
         return;
     }
     const expr = try std.mem.join(arena, " ", parts.items);
 
-    const result = zc.eval(expr) catch |err| {
+    const result = nib.eval(expr) catch |err| {
         std.debug.print("Error: {s}\n", .{switch (err) {
             error.ExpectedNumber => "expected a number",
             error.SyntaxError => "malformed expression",

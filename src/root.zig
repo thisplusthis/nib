@@ -1,4 +1,4 @@
-//! zc — 64-bit integer expression evaluator for programmers.
+//! nib — 64-bit integer expression evaluator for programmers.
 //!
 //! Radixes: decimal, `0x` hex, `0o` octal, `0b` binary, `_` digit separators.
 //! Operators, by precedence (tight → loose), C order, left-associative:
@@ -10,7 +10,7 @@
 //!   ^
 //!   |
 //! Arithmetic wraps (two's-complement, like a CPU register); `>>` is
-//! arithmetic (sign-extending); `<<` truncates overflow. No parentheses.
+//! arithmetic (sign-extending); `<<` truncates overflow. Parentheses group.
 const std = @import("std");
 
 pub const EvalError = error{
@@ -46,7 +46,7 @@ pub fn group(buf: []u8, digits: []const u8, n: usize) []const u8 {
 
 const Op = enum { bit_or, bit_xor, bit_and, shl, shr, add, sub, mul, div, rem, not };
 
-const Tok = union(enum) { num: i64, op: Op, end };
+const Tok = union(enum) { num: i64, op: Op, lparen, rparen, end };
 
 const Lexer = struct {
     s: []const u8,
@@ -72,6 +72,8 @@ const Lexer = struct {
             '~' => .{ .op = .not },
             '<' => l.pair('<', .shl),
             '>' => l.pair('>', .shr),
+            '(' => .lparen,
+            ')' => .rparen,
             else => error.SyntaxError,
         };
     }
@@ -140,7 +142,14 @@ const Parser = struct {
                 },
                 else => return error.ExpectedNumber,
             },
-            .end => return error.ExpectedNumber,
+            .lparen => {
+                try p.advance();
+                const v = try p.parseExpr(0);
+                if (p.cur != .rparen) return error.SyntaxError; // unmatched (
+                try p.advance();
+                return v;
+            },
+            .rparen, .end => return error.ExpectedNumber,
         }
     }
 };
@@ -216,6 +225,17 @@ test "group" {
     try std.testing.expectEqualStrings("1111_1010", group(&b, "11111010", 4));
     try std.testing.expectEqualStrings("1_0000", group(&b, "10000", 4));
     try std.testing.expectEqualStrings("ffff_ffff_ffff_ffff", group(&b, "ffffffffffffffff", 4));
+}
+
+test "parentheses" {
+    try std.testing.expectEqual(@as(i64, 9), try eval("(1 + 2) * 3"));
+    try std.testing.expectEqual(@as(i64, 14), try eval("2 * (3 + 4)"));
+    try std.testing.expectEqual(@as(i64, 1), try eval("((1))"));
+    try std.testing.expectEqual(@as(i64, -3), try eval("-(1 + 2)"));
+    try std.testing.expectEqual(@as(i64, 0x30), try eval("(0x10 | 0x20) & 0xf0"));
+    try std.testing.expectError(error.SyntaxError, eval("(1 + 2"));
+    try std.testing.expectError(error.SyntaxError, eval("1 + 2)"));
+    try std.testing.expectError(error.ExpectedNumber, eval("()"));
 }
 
 test "errors" {
